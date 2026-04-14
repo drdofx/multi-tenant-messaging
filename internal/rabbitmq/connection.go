@@ -127,10 +127,17 @@ func (c *Connection) IsClosed() bool {
 	return c.closed
 }
 
+// GetConnection returns the underlying amqp.Connection
+func (c *Connection) GetConnection() *amqp.Connection {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.conn
+}
+
 // handleReconnect handles connection reconnection
 func (c *Connection) handleReconnect() {
 	closeChan := make(chan *amqp.Error)
-	
+
 	c.mu.RLock()
 	if c.conn != nil {
 		c.conn.NotifyClose(closeChan)

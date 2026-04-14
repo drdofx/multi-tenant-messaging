@@ -74,7 +74,7 @@ func main() {
 
 	// Initialize tenant manager
 	tenantManager := tenant.NewManager(
-		rmqConn,
+		rmqConn.GetConnection(),
 		db,
 		cfg.Workers.Default,
 		cfg.Workers.Max,
