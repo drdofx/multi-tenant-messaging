@@ -1,13 +1,13 @@
 -- Migration 002: Create partitioned messages table
 CREATE TABLE IF NOT EXISTS messages (
-    id UUID PRIMARY KEY,
+    id UUID NOT NULL,
     tenant_id UUID NOT NULL,
     payload JSONB NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
     retry_count INT NOT NULL DEFAULT 0 CHECK (retry_count >= 0 AND retry_count <= 3),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    PRIMARY KEY (id, tenant_id)
 ) PARTITION BY LIST (tenant_id);
 
 -- Composite index for cursor pagination
