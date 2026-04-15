@@ -10,6 +10,8 @@ import (
 
 // JWTClaims represents JWT claims
 type JWTClaims struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
 	TenantID string `json:"tenant_id"`
 	Role     string `json:"role"`
 	jwt.RegisteredClaims
@@ -90,10 +92,23 @@ func GenerateToken(secret, tenantID, role string, expiry time.Duration) (string,
 
 // GetTenantID extracts tenant ID from context
 func GetTenantID(c *fiber.Ctx) string {
-	return c.Locals("tenant_id").(string)
+	if claims, ok := c.Locals("user").(*JWTClaims); ok {
+		return claims.TenantID
+	}
+	return ""
 }
 
 // GetClaims extracts JWT claims from context
 func GetClaims(c *fiber.Ctx) *JWTClaims {
 	return c.Locals("user").(*JWTClaims)
+}
+
+// GetUserID extracts user ID from context
+func GetUserID(c *fiber.Ctx) string {
+	return c.Locals("user").(*JWTClaims).UserID
+}
+
+// GetUsername extracts username from context
+func GetUsername(c *fiber.Ctx) string {
+	return c.Locals("user").(*JWTClaims).Username
 }

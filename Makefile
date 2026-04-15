@@ -1,4 +1,4 @@
-.PHONY: all build run test clean docker-up docker-down migrate-up migrate-down swag sqlc
+.PHONY: all build run test clean docker-up docker-down migrate-up migrate-down migrate-create migrate-status swag sqlc
 
 # Default target
 all: build
@@ -40,15 +40,22 @@ docker-down:
 docker-logs:
 	docker-compose logs -f
 
-# Database migrations (requires goose or golang-migrate)
+# Database migrations using goose
+migrate-create:
+	@which goose > /dev/null || (echo "Installing goose..." && go install github.com/pressly/goose/v3/cmd/goose@latest)
+	goose create $(NAME) db/migrations
+
 migrate-up:
-	@echo "Running migrations..."
-	@for file in internal/database/migrations/*.sql; do \
-		echo "Applying $$file"; \
-	done
+	@which goose > /dev/null || (echo "Installing goose..." && go install github.com/pressly/goose/v3/cmd/goose@latest)
+	goose -dir db/migrations postgres "$$DATABASE_URL" up
 
 migrate-down:
-	@echo "Rolling back migrations..."
+	@which goose > /dev/null || (echo "Installing goose..." && go install github.com/pressly/goose/v3/cmd/goose@latest)
+	goose -dir db/migrations postgres "$$DATABASE_URL" down
+
+migrate-status:
+	@which goose > /dev/null || (echo "Installing goose..." && go install github.com/pressly/goose/v3/cmd/goose@latest)
+	goose -dir db/migrations postgres "$$DATABASE_URL" status
 
 # Generate swagger docs
 swag:
@@ -80,6 +87,6 @@ security:
 	govulncheck ./...
 
 # Full setup for development
-setup: deps docker-up migrate-up
-	@echo "Development environment ready!"
+setup: deps docker-up
+	@echo "Migrations will run automatically on app startup"
 	@echo "Run 'make run' to start the application"
